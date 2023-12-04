@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import useAxiosPublic from "../../hooks/useAxiosPublic";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AiFillLike } from "react-icons/ai";
 import { AiOutlineLike } from "react-icons/ai";
@@ -8,24 +8,26 @@ import { AiFillDislike } from "react-icons/ai";
 import { AiOutlineDislike } from "react-icons/ai";
 import useRole from "../../hooks/useRole";
 import useAuth from "../../hooks/useAuth";
+import moment from "moment";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import Swal from "sweetalert2";
 
 const SurveyDetails = () => {
 
     const { user } = useAuth();
+    const navigate = useNavigate();
     const axiosPublic = useAxiosPublic();
     const [already, setAlready] = useState("null");
     const [getRole, isRolePending] = useRole();
-    // console.log(getRole);
 
     const [selectedOption, setSelectedOption] = useState(null);
     const [like, setLike] = useState(0);
     const [disLike, setDisLike] = useState(0);
 
     const { id } = useParams();
-    // console.log(id);
 
-    const { data: surveyData, refetch } = useQuery({
-        queryKey: ["allSurveys"],
+    const { data: surveyData, refetch, isPending } = useQuery({
+        queryKey: ["surveyData"],
         queryFn: async () => {
             const res = await axiosPublic.get(`/surveydetails/${id}`);
             return res.data;
@@ -34,12 +36,9 @@ const SurveyDetails = () => {
 
     useEffect(() => {
         if (surveyData && user?.email) {
-            axiosPublic.get(`/getwhoattendsurvey/${surveyData[0]._id}`)
+            axiosPublic.get(`/getwhoattendsurvey/${surveyData._id}`)
                 .then(res => {
-                    // console.log(res.data[0]);
-                    // console.log(user.email);
                     const check = res?.data?.find(em => em.surveySubmittedBy === user.email);
-                    // console.log(check.surveySubmittedBy, 'check');
                     if (check) {
                         setAlready(true);
                     } else {
@@ -47,11 +46,7 @@ const SurveyDetails = () => {
                     }
                 })
         }
-    }, [axiosPublic, surveyData, user?.email])
-
-    // console.log(already);
-
-    // console.log(surveyData[0]);
+    }, [axiosPublic, surveyData, user?.email, like])
 
     const handleOptionChange = (e) => {
         setSelectedOption(e.target.value);
@@ -81,161 +76,273 @@ const SurveyDetails = () => {
         let no = 0;
         let total = 1;
         if (selectedOption === null) {
-            return alert("select option");
+            return Swal.fire({
+                position: "center",
+                icon: "warning",
+                title: "Please select an option",
+                showConfirmButton: false,
+                timer: 1500
+            });
         }
         if (like === 0 && disLike === 0) {
-            return alert("please like or dislike")
+            return Swal.fire({
+                position: "center",
+                icon: "warning",
+                title: "Please like or dislike",
+                showConfirmButton: false,
+                timer: 1500
+            });
         }
         if (selectedOption === "Yes") {
             yes = 1;
         } else {
             no = 1;
         }
-        const newYes = yes + surveyData[0].yes;
-        const newNo = no + surveyData[0].no;
-        const newTotal = total + surveyData[0].total;
-        const newLike = like + surveyData[0].like;
-        const newDisLike = disLike + surveyData[0].dislike;
+        const newYes = yes + surveyData.yes;
+        const newNo = no + surveyData.no;
+        const newTotal = total + surveyData.total;
+        const newLike = like + surveyData.like;
+        const newDisLike = disLike + surveyData.dislike;
         const surveySubmittedBy = user?.email;
-        const submittedSurveyId = surveyData[0]._id;
+        const submittedSurveyId = surveyData._id;
         const comment = e.target.comment?.value;
+        const report = e.target.report?.value;
         let newComments = null;
+        let newReports = null;
         if (comment) {
-            newComments = [...surveyData[0].comments, comment];
-            // console.log([...surveyData[0].comments, comment]);
+            newComments = [...surveyData.comments, comment];
         } else {
-            newComments = surveyData[0].comments;
-            // console.log(surveyData[0].comments);
+            newComments = surveyData.comments;
+        }
+        if (report) {
+            newReports = [...surveyData.reports, comment];
+        } else {
+            newReports = surveyData.comments;
         }
 
-        const forUpdate = { newYes, newNo, newTotal, newLike, newDisLike, newComments };
+        const forUpdate = { newYes, newNo, newTotal, newLike, newDisLike, newComments, newReports };
         const forCheck = { surveySubmittedBy, submittedSurveyId }
-        const forResponses = {user: user.email, name: user.displayName, time: new Date(), sid: surveyData[0]._id, vote: selectedOption.toLowerCase()}
+        console.log(forUpdate);
+        console.log(forCheck);
+        // const forResponses = { user: user.email, name: user.displayName, time: new Date(), sid: surveyData[0]._id, vote: selectedOption.toLowerCase() }
         const data = [forCheck, forUpdate]
         axiosPublic.patch(`/surveyaftervote/${submittedSurveyId}`, data)
             .then(res => {
-                console.log(res.data[0].modifiedCount, "   ", res.data[1].insertedId);
+                console.log(res.data[0]);
                 if (res.data[0].modifiedCount > 0 && res.data[1].insertedId) {
-                    axiosPublic.get(`/getwhoattendsurvey/${surveyData[0]._id}`)
+                    axiosPublic.get(`/getwhoattendsurvey/${surveyData._id}`)
                         .then(() => {
+                            Swal.fire({
+                                position: "center",
+                                icon: "success",
+                                title: "Vote Successful",
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                            setLike(0);
+                            setDisLike(0);
+                            setSelectedOption(null);
+                            e.target.comment.value = ""
+                            e.target.report.value = ""
                             refetch();
+                            navigate("/surveypage");
                         })
                 }
             })
     }
 
-    return already === "null" ?
-        <div className="w-full h-screen flex justify-center items-center"><span className="loading loading-ring loading-lg"></span></div> :
-        already === false ?
-            (
-                <div className="mt-10 overflow-y-auto">
-                    <div>
-                        {
-                            surveyData?.map(survey => {
-                                return <div key={survey._id}>
-                                    <div className="flex justify-center">
-                                        <div className="flex-1 mt-2">
-                                            <img src="https://i.ibb.co/nLXkFGp/svey.webp" alt="" />
-                                            <div className="flex items-center gap-5 mt-5">
-                                                <img className="h-12 w-12 rounded-full" src={survey.surveyorImage} alt="" />
-                                                <div>
-                                                    <h6 className="font-bold">Posted by: {survey.name}</h6>
-                                                    <p>{survey.addedby}</p>
-                                                    <p>Published: {survey.publishDate}</p>
-                                                    <p>Expired: {survey.expDate}</p>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <h2 className="mt-6">Like or Dislike the survey here</h2>
-                                                <div className="flex justify-start gap-20 mt-5">
-                                                    <div>
-                                                        {
-                                                            like === 0 ?
-                                                                <button><AiOutlineLike className="text-3xl" onClick={handleLike}></AiOutlineLike></button> :
-                                                                <button><AiFillLike className="text-3xl" onClick={handleLike}></AiFillLike></button>
-                                                        }
-                                                    </div>
-                                                    <div>
-                                                        {
-                                                            disLike === 0 ?
-                                                                <button><AiOutlineDislike className="text-3xl" onClick={handleDislike}></AiOutlineDislike></button> :
-                                                                <button><AiFillDislike className="text-3xl" onClick={handleDislike}></AiFillDislike></button>
-                                                        }
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <h2 className="text-xl font-bold mt-10">All added comments</h2>
-                                                <div className="h-32 overflow-y-auto mt-4 space-y-2">
-                                                    {
-                                                        survey.comments.map((survey, index) => {
-                                                            return <h5 className="font-bold" key={index}>{index + 1} {survey}</h5>
-                                                        })
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex-1 space-y-5">
-                                            <h2 className="font-bold text-2xl">{survey.title}</h2>
-                                            <p>{survey.description}</p>
-                                            <p className="font-bold">{survey.category}</p>
-                                            <div className="mt-8">
-                                                <h2 className="font-bold text-2xl">Submit your opinion</h2>
-                                                <form onSubmit={responseSubmit}>
-                                                    <p className="font-bold mb-2 mt-5">Answer the question</p>
-                                                    <h2 className="text-xl font-bold">{survey.question}</h2>
-                                                    <div className="space-y-2 mt-4">
-                                                        <div className="flex items-center space-x-2">
-                                                            <input
-                                                                type="radio"
-                                                                id="radio-yes"
-                                                                name="radio-group"
-                                                                className="radio radio-success"
-                                                                value="Yes"
-                                                                checked={selectedOption === 'Yes'}
-                                                                onChange={handleOptionChange}
-                                                            />
-                                                            <label htmlFor="radio-yes">Yes</label>
-                                                        </div>
-                                                        <div className="flex items-center space-x-2">
-                                                            <input
-                                                                type="radio"
-                                                                id="radio-no"
-                                                                name="radio-group"
-                                                                className="radio radio-success"
-                                                                value="No"
-                                                                checked={selectedOption === 'No'}
-                                                                onChange={handleOptionChange}
-                                                            />
-                                                            <label htmlFor="radio-no">No</label>
-                                                        </div>
-                                                        {
-                                                            isRolePending ?
-                                                                <span className="loading loading-ball loading-lg"></span> :
-                                                                getRole.role === "pro user" ?
-                                                                    <div className="form-control flex-1">
-                                                                        <label className="label">
-                                                                            <span className="label-text font-bold">Add Comment</span>
-                                                                        </label>
-                                                                        <input type="text" placeholder="write a comment" name="comment" className="font-bold text-sm input rounded-none input-bordered focus:border-black focus:outline-none h-12" />
-                                                                    </div>
-                                                                    : ""
-                                                        }
-                                                    </div>
+    // for chart
+    const getPath = (x, y, width, height) => {
+        return `M${x},${y + height}C${x + width / 3},${y + height} ${x + width / 2},${y + height / 3}
+        ${x + width / 2}, ${y}
+        C${x + width / 2},${y + height / 3} ${x + (2 * width) / 3},${y + height} ${x + width}, ${y + height}
+        Z`;
+    };
 
-                                                    <input className="btn mt-16" type="submit" value="Submit" />
-                                                </form>
-                                            </div>
+    const TriangleBar = (props) => {
+        const { fill, x, y, width, height } = props;
+
+        return <path d={getPath(x, y, width, height)} stroke="none" fill={fill} />;
+    };
+
+    const [showR, setShowR] = useState(false);
+    // console.log(getRole.role);
+
+    return <div className="mt-10 overflow-y-auto">
+        <div>
+            {
+                (isPending) ? ""
+                    :
+                    <div key={surveyData._id}>
+                        <div className="flex justify-center">
+                            <div className="flex-1 mt-2 pr-20">
+                                <div>
+                                    <div className="flex items-center gap-5 mb-8">
+                                        <img className="h-12 w-12 rounded-full" src={surveyData.surveyorImage} alt="" />
+                                        <div>
+                                            <h6 className="font-bold">Posted by: {surveyData.name}</h6>
+                                            <p>{surveyData.addedby}</p>
+                                            <p>Published: {surveyData.expDate.toString().split('T')[0]}</p>
+                                            <p>Expires {moment(new Date(surveyData.expDate)).endOf().fromNow()}</p>
+                                        </div>
+                                    </div>
+                                    <img src="https://i.ibb.co/nLXkFGp/svey.webp" alt="" />
+                                </div>
+                                <div>
+                                    <div className="flex justify-start gap-5 mt-5">
+                                        <div>
+                                            {
+                                                like === 0 ?
+                                                    <button><AiOutlineLike className="text-2xl text-green-500" onClick={handleLike}></AiOutlineLike></button> :
+                                                    <button><AiFillLike className="text-2xl text-green-500" onClick={handleLike}></AiFillLike></button>
+                                            }
+                                        </div>
+                                        <div>
+                                            {
+                                                disLike === 0 ?
+                                                    <button><AiOutlineDislike className="text-2xl text-red-500" onClick={handleDislike}></AiOutlineDislike></button> :
+                                                    <button><AiFillDislike className="text-2xl text-red-500" onClick={handleDislike}></AiFillDislike></button>
+                                            }
                                         </div>
                                     </div>
                                 </div>
-                            })
+                                <div className="shadow-xl mb-10 bg-slate-600 px-5 pb-5 mt-6">
+                                    <h2 className="text-base font-bold pt-5 text-white">All added comments</h2>
+                                    <div className="h-64 overflow-y-auto mt-4 space-y-5 bg-slate-100 px-5 pt-5">
+                                        {
+                                            surveyData.comments.map((survey, index) => {
+                                                return <h5 className="font-bold bg-slate-400 px-2 py-1" key={index}>{index + 1} {survey}</h5>
+                                            })
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex-1 space-y-5">
+                                <h2 className="font-bold text-2xl">{surveyData.title}</h2>
+                                <p>{surveyData.description}</p>
+                                <p className="font-bold">Category: {surveyData.category}</p>
+                                <div className="mt-8">
+                                    <h2 className="font-bold mt-8 text-lg">Submit your opinion</h2>
+                                    <form onSubmit={responseSubmit}>
+                                        <h2 className="font-bold mt-8">{surveyData.question}</h2>
+                                        <div className="space-y-2 mt-4">
+                                            <div className="flex items-center space-x-2">
+                                                <input
+                                                    type="radio"
+                                                    id="radio-yes"
+                                                    name="radio-group"
+                                                    className="radio radio-success"
+                                                    value="Yes"
+                                                    checked={selectedOption === 'Yes'}
+                                                    onChange={handleOptionChange}
+                                                />
+                                                <label htmlFor="radio-yes">Yes</label>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <input
+                                                    type="radio"
+                                                    id="radio-no"
+                                                    name="radio-group"
+                                                    className="radio radio-success"
+                                                    value="No"
+                                                    checked={selectedOption === 'No'}
+                                                    onChange={handleOptionChange}
+                                                />
+                                                <label htmlFor="radio-no">No</label>
+                                            </div>
+                                            {
+                                                isRolePending ?
+                                                    <span className="loading loading-ball loading-lg"></span> :
+                                                    getRole.role === "pro user" ?
+                                                        <div className="form-control flex-1">
+                                                            <div className="relative mt-10">
+                                                                <label className="label">
+                                                                    <span className="label-text font-bold">Add Comment</span>
+                                                                </label>
+                                                                <input type="text" placeholder="write a comment" name="comment" className="font-bold text-sm input rounded-none input-bordered focus:border-black focus:outline-none h-12 w-full" />
+                                                            </div>
+                                                        </div>
+                                                        : ""
+                                            }
+                                        </div>
+                                        <div className="my-10">
+                                            <h5>Do you think survey contains inappropriate content <span onClick={() => setShowR(!showR)} className="text-xl font-bold text-red-600">Report Now</span></h5>
+                                            <div className={showR ? "" : "hidden"}>
+                                                <input type="text" placeholder="write a report" name="report" className="font-bold text-sm input rounded-none input-bordered focus:border-black focus:outline-none h-12 w-full mt-4" />
+                                            </div>
+                                        </div>
+                                        {
+                                            already === "null" ? ""
+                                                :
+                                                (new Date(surveyData?.expDate) - new Date() <= 0 || already === true || getRole.role === "admin" || getRole.role === "surveyor") ? "" :
+                                                    <input className="btn mt-5 bg-green-500 text-white" type="submit" value="Submit" />
+                                        }
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {
+                            (new Date(surveyData?.expDate) - new Date() <= 0 || already === true) ?
+                                <div>
+                                    {refetch}
+                                    {
+                                        <div className="flex">
+                                            <div>
+                                                <div>
+                                                    <p>Yes Voted: {surveyData.yes}</p>
+                                                    <p>No Voted: {surveyData.no}</p>
+                                                    <BarChart
+                                                        width={500}
+                                                        height={300}
+                                                        data={[{ name: "yes", uv: surveyData.yes }, { name: "no", uv: surveyData.no }]}
+                                                        margin={{
+                                                            top: 20,
+                                                            right: 30,
+                                                            left: 20,
+                                                            bottom: 5,
+                                                        }}
+                                                    >
+                                                        <CartesianGrid strokeDasharray="3 3" />
+                                                        <XAxis dataKey="name" />
+                                                        <YAxis />
+                                                        <Bar dataKey="uv" fill="#8884d8" shape={<TriangleBar />} label={{ position: 'top' }}>
+                                                        </Bar>
+                                                    </BarChart>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div>
+                                                    <p>Liked: {surveyData.like}</p>
+                                                    <p>Disliked: {surveyData.dislike}</p>
+                                                    <BarChart
+                                                        width={500}
+                                                        height={300}
+                                                        data={[{ name: "like", uv: surveyData.like }, { name: "dislike", uv: surveyData.dislike }]}
+                                                        margin={{
+                                                            top: 20,
+                                                            right: 30,
+                                                            left: 20,
+                                                            bottom: 5,
+                                                        }}
+                                                    >
+                                                        <CartesianGrid strokeDasharray="3 3" />
+                                                        <XAxis dataKey="name" />
+                                                        <YAxis />
+                                                        <Bar dataKey="uv" fill="#8884d8" shape={<TriangleBar />} label={{ position: 'top' }}>
+                                                        </Bar>
+                                                    </BarChart>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                :
+                                ""
                         }
                     </div>
-                </div>
-            )
-            :
-            <div className="w-full flex justify-center items-center"><h2>Already Submitted</h2></div>
+            }
+        </div>
+    </div>
 };
 
 export default SurveyDetails;

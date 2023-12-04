@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
 import useAuth from "../../../hooks/useAuth";
 import moment from "moment/moment";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const CheckOutForm = () => {
 
@@ -13,6 +15,7 @@ const CheckOutForm = () => {
     const [error, setError] = useState('');
     const [transactionId, setTransactionId] = useState('');
     const [clientSecret, setClientSecret] = useState('');
+    const navigate = useNavigate();
 
     const stripe = useStripe();
     const elements = useElements();
@@ -81,6 +84,14 @@ const CheckOutForm = () => {
                     .then(res => {
                         console.log(res.data);
                         card.clear();
+                        Swal.fire({
+                            position: "center",
+                            icon: "success",
+                            title: "Payment Successful",
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        navigate("/");
                     })
             }
         }

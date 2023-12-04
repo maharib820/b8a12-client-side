@@ -17,6 +17,13 @@ import Payment from "../Pages/GeneralPages/Payment/Payment";
 import AdminRoute from "./AdminRoute";
 import PaymentHistory from "../Pages/Dashboard/AdminPart/PaymentHistory/PaymentHistory";
 import UpdateCreatedSurvejs from "../Pages/Dashboard/SurveyorPart/UpdateCreatedSurveys/UpdateCreatedSurvejs";
+import PrivateRoute from "./PrivateRoute";
+import UserRoute from "./UserRoute";
+import SurveyorRoute from "./SurveyorRoute";
+import AdminSurveyResponses from "../Pages/Dashboard/AdminPart/AdminSurveyResponses/AdminSurveyResponses";
+import SurveyorSurveyResponses from "../Pages/Dashboard/SurveyorPart/SurveryorSurveyResponses/SurveyorSurveyResponses";
+import AdminResponse from "../Pages/Dashboard/SurveyorPart/AdminResponse/AdminResponse";
+import UsersResponses from "../Pages/Dashboard/SurveyorPart/UsersResponses/UsersResponses";
 
 const router = createBrowserRouter([
     {
@@ -37,7 +44,7 @@ const router = createBrowserRouter([
             },
             {
                 path: "/surveydetails/:id",
-                element: <SurveyDetails></SurveyDetails>
+                element: <PrivateRoute><SurveyDetails></SurveyDetails></PrivateRoute>
             },
             {
                 path: "/surveypage",
@@ -45,11 +52,11 @@ const router = createBrowserRouter([
             },
             {
                 path: "/pricing",
-                element: <Pricing></Pricing>
+                element: <PrivateRoute><Pricing></Pricing></PrivateRoute>
             },
             {
                 path: "/payment",
-                element: <Payment></Payment>
+                element: <UserRoute><Payment></Payment></UserRoute>
             }
         ]
     },
@@ -65,15 +72,15 @@ const router = createBrowserRouter([
             },
             {
                 path: "managesurveys",
-                element: <ManageUsers></ManageUsers>
+                element: <AdminRoute><ManageUsers></ManageUsers></AdminRoute>
             },
             {
                 path: "allpaymentdetails",
-                element: <ManageUsers></ManageUsers>
+                element: <AdminRoute><ManageUsers></ManageUsers></AdminRoute>
             },
             {
                 path: "manageusers",
-                element: <ManageUsers></ManageUsers>
+                element: <AdminRoute><ManageUsers></ManageUsers></AdminRoute>
             },
             {
                 path: "managesurveystatus",
@@ -83,19 +90,35 @@ const router = createBrowserRouter([
                 path: "paymenthistory",
                 element: <AdminRoute><PaymentHistory></PaymentHistory></AdminRoute>
             },
+            {
+                path: "adminsurveyresponses",
+                element: <AdminRoute><AdminSurveyResponses></AdminSurveyResponses></AdminRoute>
+            },
 
             // surveyor section
             {
                 path: "createsurvey",
-                element: <CreateSurvey></CreateSurvey>
+                element: <SurveyorRoute><CreateSurvey></CreateSurvey></SurveyorRoute>
             },
             {
                 path: "alladdedsurveys",
-                element: <AllAddedSurveys></AllAddedSurveys>
+                element: <SurveyorRoute><AllAddedSurveys></AllAddedSurveys></SurveyorRoute>
             },
             {
                 path: "updatecreatedsurveys/:id",
-                element:<UpdateCreatedSurvejs></UpdateCreatedSurvejs>
+                element: <SurveyorRoute><UpdateCreatedSurvejs></UpdateCreatedSurvejs></SurveyorRoute>
+            },
+            {
+                path: "surveyorsurveyresponses",
+                element: <SurveyorRoute><SurveyorSurveyResponses></SurveyorSurveyResponses></SurveyorRoute>
+            },
+            {
+                path: "adminfeedback",
+                element: <SurveyorRoute><AdminResponse></AdminResponse></SurveyorRoute>
+            },
+            {
+                path: "usersfeedback",
+                element: <SurveyorRoute><UsersResponses></UsersResponses></SurveyorRoute>
             }
         ]
     }

@@ -11,7 +11,7 @@ const Pricing = () => {
         <div className="w-full h-screen flex justify-center items-center"><span className="loading loading-ring loading-lg"></span></div>
         :
         (
-            <div className="flex justify-center gap-10">
+            <div className="flex justify-center gap-2 lg:gap-10">
                 <div className="shadow-2xl text-center w-60 h-72 relative mt-5 pt-5">
                     <div className="h-7 w-full mx-auto flex justify-center">
                         <IoIosStar className="text-2xl"></IoIosStar>
