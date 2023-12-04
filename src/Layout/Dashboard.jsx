@@ -121,6 +121,12 @@ const Dashboard = () => {
                                             <NavLink to={"/dashboard/bookings"} className={`flex items-center gap-4 py-3 hover:bg-[#1c5a69] pl-2 ${location.pathname === "/dashboard/bookings" ? "bg-[#1c5a69]" : ""}`}><MdOutlinePayments className="text-xl"></MdOutlinePayments>Survey Responses</NavLink>
                                         </li>
                                         <li>
+                                            <NavLink to={"/dashboard/adminfeedback"} className={`flex items-center gap-4 py-3 hover:bg-[#1c5a69] pl-2 ${location.pathname === "/dashboard/adminfeedback" ? "bg-[#1c5a69]" : ""}`}><MdFeedback className="text-xl"></MdFeedback>Admin Responses</NavLink>
+                                        </li>
+                                        <li>
+                                            <NavLink to={"/dashboard/usersfeedback"} className={`flex items-center gap-4 py-3 hover:bg-[#1c5a69] pl-2 ${location.pathname === "/dashboard/usersfeedback" ? "bg-[#1c5a69]" : ""}`}><VscFeedback className="text-xl"></VscFeedback>Admin Responses</NavLink>
+                                        </li>
+                                        <li>
                                             <NavLink to={"/"} className={`flex items-center gap-4 py-3 hover:bg-[#1c5a69] pl-2`}><FaHome className="text-xl"></FaHome>Home</NavLink>
                                         </li>
                                     </>

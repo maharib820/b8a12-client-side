@@ -24,11 +24,13 @@ import AdminSurveyResponses from "../Pages/Dashboard/AdminPart/AdminSurveyRespon
 import SurveyorSurveyResponses from "../Pages/Dashboard/SurveyorPart/SurveryorSurveyResponses/SurveyorSurveyResponses";
 import AdminResponse from "../Pages/Dashboard/SurveyorPart/AdminResponse/AdminResponse";
 import UsersResponses from "../Pages/Dashboard/SurveyorPart/UsersResponses/UsersResponses";
+import ErrorPage from "../Pages/ErrorPage";
 
 const router = createBrowserRouter([
     {
         path: "/",
         element: <Main></Main>,
+        errorElement: <ErrorPage></ErrorPage>,
         children: [
             {
                 path: "/",
@@ -63,6 +65,7 @@ const router = createBrowserRouter([
     {
         path: "/dashboard",
         element: <Dashboard></Dashboard>,
+        errorElement: <ErrorPage></ErrorPage>,
         children: [
 
             // admin section
