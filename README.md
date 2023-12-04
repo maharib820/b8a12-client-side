@@ -1,8 +1,20 @@
-# React + Vite
+# Client user information
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- At first sign up and login
+- Initially registered user role is user/normal user
+- Admin can make anyone admin or surviyor
+- Normal user can purchage package to be pro user for extra facility
+- Only user and pro user can participiate in survey
+- Only admin and surveyor have dashboard access
+- Surveyor can create survey
+- Admin can manage created survey
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+# Challenges faced in backend
+
+Maintaining all in a single page is difficult. Here I need to focus if there is not and duplication
+
+
+# Live Link
+- [@https://survey-bf631.web.app/]
+
